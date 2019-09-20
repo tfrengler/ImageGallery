@@ -23,5 +23,4 @@
     <cfabort/>
 </cfif>
 
-<cfheader name="Content-Length" value="#application.images[trim(URL.ImageID)].size#" />
-<cfcontent type="image/jpeg" file="#expandPath("/Data")#/#application.images[trim(URL.ImageID)].name#" />
+<cfcontent type="image/jpeg" file="#expandPath("/Thumbnails")#/thumb_#application.images[trim(URL.ImageID)].name#.jpg" />

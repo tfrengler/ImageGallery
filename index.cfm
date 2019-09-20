@@ -1,3 +1,14 @@
+<cfset sortedFileNames = [] />
+<cfset fileNameToImageIDMap = {} />
+
+<cfloop collection=#application.images# item="imageID" >
+    <cfset currentImage = application.images[imageID] />
+    <cfset arrayAppend(sortedFileNames, currentImage.name) />
+    <cfset fileNameToImageIDMap[currentImage.name] = imageID />
+</cfloop>
+
+<cfset arraySort(sortedFileNames, "text", "asc") />
+
 <!DOCTYPE html>
 <html>
 
@@ -10,6 +21,21 @@
             @font-face {
                 font-family: Warcraft;
                 src: url("MORPHEUS.TTF");
+            }
+
+            #NotificationContainer {
+                position: fixed;
+                top: 0;
+                background-color: #4CAF50; 
+                color: white;
+                border-radius: 0.2em;
+                padding: 0.5em;
+                left: 50%;
+                transform: translateX(-50%);
+                margin-top: 1em;
+                z-index: 1000;
+                font-size: 2em;
+                display: none;
             }
 
             #Overlay {
@@ -38,9 +64,10 @@
                 background-color: #4CAF50;
                 color: white;
                 padding-bottom: 0.5em;
+                font-size: 3em;
             }
 
-            #PopUpContainer div:hover {
+            #PopUpClose:hover {
                 color: yellow;
                 cursor: pointer;
             }
@@ -71,7 +98,7 @@
                 border-radius: inherit;
             }
 
-            img {
+            .ImageWrapper img, #PopUpContainer img {
                 width: auto;
                 height: auto;
                 max-width: 100%;
@@ -113,31 +140,22 @@
         </style>
 
         <cfoutput>
-        <script type="text/javascript" nonce="#request.nonce#">
-        
+        <script type="text/javascript" <cfif structKeyExists(request, "nonce")>nonce="#request.nonce#"</cfif>>
             "use strict";
 
             const images = {};
 
-            <cfloop collection=#application.images# item="imageID" >
-                <cfset currentImage = application.images[imageID] />
+            <cfloop array=#sortedFileNames# index="imageName" >
+                <cfset currentImageID = fileNameToImageIDMap[imageName] />
 
-                images["#imageID#"] = {
-                    name: "",
-                    loaded: 0,
-                    size: 0,
-                    data: "",
-                    chunks: new Set()
-                };
-
-                images["#imageID#"].name = "#currentImage.name#";
-                Object.seal(images["#imageID#"]);
+                images["#currentImageID#"] = Object.seal({
+                    name: "#imageName#",
+                    data: ""
+                });
             </cfloop>
-        </cfoutput>
+            </cfoutput>
 
-            // const loadList = Object.keys(images);
-            const loadList = ["B11A76442E59B301260D8B0B6EF71FF3","9A6C6E2034CBCF9F98E991AE4C30B16D","7FEE369F49E91AFC4053091CCC89DE0F"];
-            // const loadList = [];
+            const loadList = Object.keys(images);
 
             window.onload = function() {
                 Object.freeze(images);
@@ -176,10 +194,6 @@
             };
 
             const fetchImage = function(ID) {
-                if (!document.querySelector(`section[data-imageid='${ID}']`)) {
-                    loadImages();
-                    return;
-                };
 
                 const request = new Request(`GetImage.cfm?ImageID=${ID}`, {
                     cache: "force-cache",
@@ -202,60 +216,41 @@
 
                         throw new Error(`Server did not return status 200 | ${response.status} | ${ID}`);
                     }
-                    else {
-                        images[ID].size = parseInt(response.headers.get("Content-Length"));
-                        document.querySelector(`section[data-imageid='${ID}'] progress`).max = images[ID].size;
-                        readImageStream(response.body.getReader(), ID);
-                    }
+                    else response.blob().then(file=> onImageLoaded(ID, file));
                 })
                 .catch(error=> {
-                    // window.alert(error);
-                    loadImages();
+                    console.error(error);
+                    window.setTimeout(loadImages, 100);
                 });
 
             };
 
-            const readImageStream = function(reader, ID) {
-                return reader.read().then(result=> {
-                    
-                    if (result.done) {
-                        onImageLoaded(ID);
-                        return;
-                    };
+            const onImageLoaded = function(ID, file) {
+                images[ID].data = URL.createObjectURL(file);
+                document.querySelector(`section[data-imageid='${ID}'] .Loader`).style.display = "none";
 
-                    // retrieve the multi-byte chunk of data
-                    images[ID].chunks.add(result.value);
-                    // report our current progress
-                    images[ID].loaded += result.value.byteLength;
-                    document.querySelector(`section[data-imageid='${ID}'] progress`).value = images[ID].loaded;
-                    
-                    // go to next chunk via recursion
-                    return readImageStream(reader, ID);
-                });
-            };
+                let imageElement = document.querySelector(`img[data-imageid='${ID}']`);
+                imageElement.style.display = "block";
 
-            const onImageLoaded = function(ID) {
-                try {
-                    let file = new Blob(images[ID].chunks, {type: "image/jpeg"});
-                    images[ID].data = URL.createObjectURL(file);
-                }
-                catch(error) {
-                    images[ID].data = "error";
+                imageElement.onerror = function() {
+                    this.src = "no_image.png";
+                    document.querySelector("#Overlay").style.display = "block";
+                    onPopupImageLoaded();
                 };
 
-                images[ID].chunks.clear();
-                document.querySelector(`section[data-imageid='${ID}'] .Loader`).style.display = "none";
-                let imageElement = document.querySelector(`img[data-imageid='${ID}']`);
-
-                imageElement.style.display = "block";
-                imageElement.onerror = function() {this.src = "no_image.png"};
                 imageElement.src = images[ID].data;
-                imageElement.addEventListener(
-                    "click",
-                    (event)=> document.querySelector("#PopUpContainer img").src = images[event.srcElement.dataset["imageid"]].data
-                );
+                imageElement.addEventListener("click", onClickImage);
 
-                loadImages();
+                window.setTimeout(loadImages, 100);
+            };
+
+            const onClickImage = function(event) {
+                document.querySelector("#ImageDisplayName").innerText = images[event.srcElement.dataset["imageid"]].name;
+                document.querySelector("#PopUpContainer img").src = `Data/${images[event.srcElement.dataset["imageid"]].name}.jpg`;
+                
+                document.querySelector("#Overlay").style.display = "block";
+                document.querySelector("#NotificationMessage").innerText = "Loading full image...";
+                document.querySelector("#NotificationContainer").style.display = "block";
             };
 
             const onPopupImageLoaded = function() {
@@ -265,9 +260,11 @@
 
                 if (widthDifference > 10)
                     popUpElement.style.left = widthDifference / 2 + "px";
+                else
+                    popUpElement.style.left = "";
 
+                document.querySelector("#NotificationContainer").style.display = "none";
                 popUpElement.style.display = "block";
-                document.querySelector("#Overlay").style.display = "block";
             };
         </script>
     </head>
@@ -280,32 +277,35 @@
             <hr/>
         </section>
 
-        <cfif structKeyExists(URL, "debuggery") >
+        <cfif structKeyExists(URL, "debuggery") AND structKeyExists(URL, "dumpImages") >
             <cfdump var=#application.images# expand="false" />
         </cfif>
 
-        <cfloop collection=#application.images# item="imageID" >
-            <cfset currentImage = application.images[imageID] />
+        <cfloop array=#sortedFileNames# index="imageName" >
+            <cfset currentImageID = fileNameToImageIDMap[imageName] />
 
-            <section class="ImageContainer" data-imageid="#imageID#" >
+            <section class="ImageContainer" data-imageid="#currentImageID#" >
 
                 <section class="Loader" >
-                    <div>LOADING:</div>
-                    <progress value="0" max="100" ></progress>
+                    <div>LOADING</div>
                 </section>
 
                 <div class="ImageWrapper">
-                    <img data-imageid="#imageID#" src="" validate="never" referrerpolicy="no-referrer" >
+                    <img data-imageid="#currentImageID#" src="" validate="never" referrerpolicy="no-referrer" >
                 </div>
             </section>
 
         </cfloop>
 
         <section id="Overlay"></section>
+        <div id="NotificationContainer" >
+            <span id="NotificationMessage">NOTIFY ME!</span>
+        </div>
 
         <section id="PopUpContainer" >
             <div id="PopUpClose" >CLOSE</div>
             <img src="" validate="never" referrerpolicy="no-referrer" />
+            <div id="ImageDisplayName" ></div>
         </section>
 
     </cfoutput>

@@ -7,6 +7,7 @@
 	<cfset root = getDirectoryFromPath(getCurrentTemplatePath()) />
 
 	<cfset this.mappings["/Data"] = "#root#Data/" />
+	<cfset this.mappings["/Thumbnails"] = "#root#Data/Thumbnails/" />
 
 	<cffunction name="onApplicationStart" returntype="boolean" output="false" >
 
@@ -16,8 +17,7 @@
 
             <cfloop query=#imageQuery# >
 				<cfset application.images[hash(imageQuery.name, "MD5")] = {
-                    name: imageQuery.name,
-                    size: imageQuery.size
+                    name: listFirst(imageQuery.name, ".")
                 } />
             </cfloop>
 
