@@ -1,6 +1,6 @@
 <cfheader name="access-control-allow-credentials" value="false" />
 <cfheader name="access-control-allow-methods" value="GET, HEAD, OPTIONS" />
-<cfheader name="access-control-allow-origin" value="http://asgard" />
+<cfheader name="access-control-allow-origin" value="*" />
 <cfheader name="Vary" value="Origin" />
 <cfheader name="access-control-expose-headers" value="Content-Length" />
 <cfheader name="access-control-max-age" value="86400" />

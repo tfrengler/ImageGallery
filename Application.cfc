@@ -33,9 +33,13 @@
 		<cfreturn true />
 	</cffunction>
 
-	<cffunction name="onRequestStart" returntype="boolean" output="false" >
-
-		<!--- <cfheader name="X-Accel-Buffering" value="no" /> --->
+	<cffunction name="onRequestStart" returntype="boolean" output="true" >
+		<cfargument type="string" name="targetPage" required=true/>
+		
+		<cfif find("/index.cfm", arguments.targetPage) AND NOT structKeyExists(URL, "debuggery") > 
+			<cfset request.nonce = toBase64(generateSecretKey("AES", 128)) />
+			<cfheader name="Content-Security-Policy" value="script-src 'nonce-#request.nonce#'" />
+		</cfif>
 
 		<cfif structKeyExists(URL, "Restarty") >
 			<cfset sessionInvalidate() />
