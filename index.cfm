@@ -1,4 +1,6 @@
 <cfparam name="request.nonce" type="string" default="" />
+<cfparam name="request.scriptChecksum" type="string" default="" />
+<cfparam name="request.styleChecksum" type="string" default="" />
 
 <cfset sortedFileNames = [] />
 <cfset fileNameToImageIDMap = {} />
@@ -19,9 +21,11 @@
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
         <meta name="author" content="Thomas Frengler" />
 
-        <link rel="stylesheet" type="text/css" href="main.css" />
+        <cfoutput>
+        <link rel="stylesheet" type="text/css" href="main.css" <cfif len(request.nonce) GT 0 >integrity="sha384-#request.styleChecksum#"</cfif> />
+        <script type="text/javascript" src="main.js" <cfif len(request.nonce) GT 0 >integrity="sha384-#request.scriptChecksum#"</cfif> ></script>
+        </cfoutput>
 
-        <script type="text/javascript" src="main.js"></script>
         <script type="text/javascript" <cfif len(request.nonce) GT 0 ><cfoutput>nonce='#request.nonce#'</cfoutput></cfif> >
 
             const images = {};
