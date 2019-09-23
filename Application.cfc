@@ -38,7 +38,7 @@
 		
 		<cfif find("/index.cfm", arguments.targetPage) AND NOT structKeyExists(URL, "debuggery") > 
 			<cfset request.nonce = toBase64(generateSecretKey("AES", 128)) />
-			<cfheader name="Content-Security-Policy" value="script-src 'nonce-#request.nonce#'" />
+			<cfheader name="Content-Security-Policy" value="script-src 'nonce-#request.nonce#' 'self'; style-src 'nonce-#request.nonce#' 'self'" />
 		</cfif>
 
 		<cfif structKeyExists(URL, "Restarty") >
