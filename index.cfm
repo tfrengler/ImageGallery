@@ -22,10 +22,10 @@
         <meta name="author" content="Thomas Frengler" />
 
         <cfoutput>
-        <link rel="stylesheet" type="text/css" href="main.css" <cfif len(request.nonce) GT 0 >integrity="sha384-#request.styleChecksum#"</cfif> />
-        <script type="text/javascript" src="main.js" <cfif len(request.nonce) GT 0 >integrity="sha384-#request.scriptChecksum#"</cfif> ></script>
+        <link rel="stylesheet" type="text/css" href="main.css" <cfif len(request.styleChecksum) GT 0 >integrity="sha384-#request.styleChecksum#"</cfif> />
+        <script type="text/javascript" src="main.js" <cfif len(request.scriptChecksum) GT 0 >integrity="sha384-#request.scriptChecksum#"</cfif> ></script>
         </cfoutput>
-
+        
         <script type="text/javascript" <cfif len(request.nonce) GT 0 ><cfoutput>nonce='#request.nonce#'</cfoutput></cfif> >
 
             const images = {};
@@ -36,13 +36,15 @@
                 <cfset currentImageID = fileNameToImageIDMap[imageName] />
 
                 images["#currentImageID#"] = Object.seal({
-                    name: "#imageName#",
-                    data: "",
-                    number: #indexCounter#
+                    name: "#listFirst(imageName, ".")#",
+                    data: null,
+                    index: #indexCounter#
                 });
 
                 <cfset indexCounter++ />
             </cfloop>
+
+            const imageCount = #indexCounter#;
             </cfoutput>
 
             window.onload = function() {
@@ -51,10 +53,10 @@
                 Object.freeze(images);
                 
                 // The full size image popup
-                document.querySelector("#PopUpClose").addEventListener("click", ()=> {
-                    document.querySelector("#PopUpContainer").style.display = "none";
-                    document.querySelector("#Overlay").style.display = "none";
-                });
+                document.querySelector("#PopUpClose").addEventListener("click", onCloseFullImage);
+
+                document.querySelector("#ImagePrevious").addEventListener("click", ()=> onSwitchImage(true));
+                document.querySelector("#ImageNext").addEventListener("click", ()=> onSwitchImage(false));
 
                 document.querySelector("#PopUpContainer img").onload = onPopupImageLoaded;
                 document.querySelector("#PopUpContainer img").onerror = onPopupImageError;
@@ -83,8 +85,9 @@
     <cfoutput>
 
         <section id="Header" >
-            <h1>The Theramore Vanguard</h1>
-            <p>Showing #indexCounter# pictures involving Vanguard members, across raids and various events</p>
+            <h1 style="color: #application.config.bannerColor#;" >#application.config.banner#</h1>
+            <p>Showing #indexCounter# pictures</p>
+            <p>#application.config.message#</p>
             <hr/>
         </section>
 
@@ -103,6 +106,7 @@
 
                 <div class="ImageWrapper">
                     <img data-imageid="#currentImageID#" src="" validate="never" referrerpolicy="no-referrer" >
+                    <div class="ImageName" >#encodeForHTML(listFirst(imageName, "."))#</div>
                 </div>
             </section>
 
@@ -115,8 +119,13 @@
 
         <section id="PopUpContainer" >
             <div id="PopUpClose" >CLOSE</div>
-            <img src="" validate="never" referrerpolicy="no-referrer" />
-            <div id="ImageDisplayName" ></div>
+            <img data-imageid="" src="" validate="never" referrerpolicy="no-referrer" />
+
+            <section id="ImageControls" >
+                <div id="ImagePrevious">Previous</div>
+                <div id="ImageDisplayName">NAME</div>
+                <div id="ImageNext" >Next</div>
+            </section>
         </section>
 
     </cfoutput>

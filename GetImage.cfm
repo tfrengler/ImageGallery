@@ -26,9 +26,9 @@
 </cfif>
 
 <cfif structKeyExists(URL, "fullSize") >
-    <cfset imagePath = "#expandPath("/Data")#/#application.images[trim(URL.ImageID)].name#.jpg" />
+    <cfset imagePath = "#expandPath("/Data")#/#application.images[trim(URL.ImageID)].name#" />
 <cfelse>
-    <cfset imagePath = "#expandPath("/Thumbnails")#/thumb_#application.images[trim(URL.ImageID)].name#.jpg" />
+    <cfset imagePath = "#expandPath("/Thumbnails")#/thumb_#application.images[trim(URL.ImageID)].name#" />
 </cfif>
 
 <cfcontent type="#fileGetMimeType(imagePath)#" file=#imagePath# />

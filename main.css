@@ -48,7 +48,7 @@
     font-size: 3em;
 }
 
-#PopUpClose:hover {
+#PopUpClose:hover, #ImagePrevious:hover, #ImageNext:hover {
     color: yellow;
     cursor: pointer;
 }
@@ -66,12 +66,11 @@
 
 .ImageWrapper {
     width: 25em;
-    height: 18.75em;
     border-radius: 0.2em;
     border-style: solid;
     border-width: 0.2em;
     border-color: white;
-    background-color: white;
+    background-color: darkseagreen;
 }
 
 .ImageWrapper img {
@@ -88,8 +87,9 @@
     margin-right: auto;
 }
 
-.ImageWrapper img:hover {
+.ImageWrapper:hover {
     cursor: pointer;
+    border-color: firebrick;
 }
 
 body {
@@ -103,7 +103,6 @@ body {
 }
 
 #Header h1 {
-    color: blue;
     font-size: 4em;
     text-shadow: 1px 1px 2px white;
 }
@@ -116,9 +115,18 @@ body {
     align-items: center;
     z-index: 100;
     width: 25em;
-    height: 18.75em;
-    border-radius: 0.2em;
-    border-style: solid;
-    border-width: 0.2em;
-    border-color: white;
+}
+
+.ImageName {
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    visibility: hidden;
+}
+
+#ImageControls {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 1em;
 }
