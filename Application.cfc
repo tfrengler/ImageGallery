@@ -18,7 +18,7 @@
 			<cfthrow message="Config file does not exist" />
 		</cfif>
 
-		<cfset var configFile = fileRead("#root#/config.json") />
+		<cfset var configFile = fileRead(configFileLocation) />
 		<cfset application.config = deserializeJson(configFile) />
 
 		<cfif NOT structKeyExists(application.config, "banner") OR NOT structKeyExists(application.config, "bannerColor") OR NOT structKeyExists(application.config, "message") >
@@ -63,7 +63,6 @@
 
 		<cfif structKeyExists(URL, "Restarty") >
 			<cfset applicationStop() />
-			<cfset onApplicationStart() />
 			<cflocation url="#CGI.SCRIPT_NAME#?debuggery" addtoken=false />
 		</cfif>
 		

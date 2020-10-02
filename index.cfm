@@ -24,6 +24,12 @@
         <cfoutput>
         <link rel="stylesheet" type="text/css" href="main.css" <cfif len(request.styleChecksum) GT 0 >integrity="sha384-#request.styleChecksum#"</cfif> />
         <script type="text/javascript" src="main.js" <cfif len(request.scriptChecksum) GT 0 >integrity="sha384-#request.scriptChecksum#"</cfif> ></script>
+        
+        <style type="text/css" <cfif len(request.nonce) GT 0 >nonce='#request.nonce#'</cfif>>
+            ##Header h1 {
+                color: #application.config.bannerColor#;
+            }
+        </style>
         </cfoutput>
         
         <script type="text/javascript" <cfif len(request.nonce) GT 0 ><cfoutput>nonce='#request.nonce#'</cfoutput></cfif> >
@@ -85,7 +91,7 @@
     <cfoutput>
 
         <section id="Header" >
-            <h1 style="color: #application.config.bannerColor#;" >#application.config.banner#</h1>
+            <h1>#application.config.banner#</h1>
             <p>Showing #indexCounter# pictures</p>
             <p>#application.config.message#</p>
             <hr/>
